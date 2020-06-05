@@ -1,0 +1,14 @@
+language: python
+
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+install:
+    - pip install -U platformio
+    - platformio update
+
+script:
+    - platformio run
+
