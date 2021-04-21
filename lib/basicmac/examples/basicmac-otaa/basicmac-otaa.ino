@@ -33,8 +33,6 @@
 #include <hal/hal.h>
 #include <SPI.h>
 
-#include "board-config.h"
-
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
 // the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
@@ -64,15 +62,56 @@ const unsigned TX_INTERVAL = 60000;
 // Timestamp of last packet sent
 uint32_t last_packet = 0;
 
+// When this is defined, a standard pinmap from standard-pinmaps.ino
+// will be used.  If you need to use a custom pinmap, comment this line
+// and enter the pin numbers in the lmic_pins variable below.
+#define USE_STANDARD_PINMAP
+
+#if !defined(USE_STANDARD_PINMAP)
+// All pin assignments use Arduino pin numbers (e.g. what you would pass
+// to digitalWrite), or LMIC_UNUSED_PIN when a pin is not connected.
 const lmic_pinmap lmic_pins = {
-    .nss = RADIO_NSS,
-    .tx = LMIC_CONTROLLED_BY_DIO2,
+    // NSS input pin for SPI communication (required)
+    .nss = 0,
+    // If needed, these pins control the RX/TX antenna switch (active
+    // high outputs). When you have both, the antenna switch can
+    // powerdown when unused. If you just have a RXTX pin it should
+    // usually be assigned to .tx, reverting to RX mode when idle).
+    //
+    // The SX127x has an RXTX pin that can automatically control the
+    // antenna switch (if internally connected on the transceiver
+    // board). This pin is always active, so no configuration is needed
+    // for that here.
+    // On SX126x, the DIO2 can be used for the same thing, but this is
+    // disabled by default. To enable this, set .tx to
+    // LMIC_CONTROLLED_BY_DIO2 below (this seems to be common and
+    // enabling it when not needed is probably harmless, unless DIO2 is
+    // connected to GND or VCC directly inside the transceiver board).
+    .tx = LMIC_UNUSED_PIN,
     .rx = LMIC_UNUSED_PIN,
-    .rst = RADIO_RESET,
-    .dio = {LMIC_UNUSED_PIN, RADIO_DIO_1, LMIC_UNUSED_PIN},
-    .busy = RADIO_BUSY,
-    .tcxo = LMIC_CONTROLLED_BY_DIO3,
+    // Radio reset output pin (active high for SX1276, active low for
+    // others). When omitted, reset is skipped which might cause problems.
+    .rst = 1,
+    // DIO input pins.
+    //   For SX127x, LoRa needs DIO0 and DIO1, FSK needs DIO0, DIO1 and DIO2
+    //   For SX126x, Only DIO1 is needed (so leave DIO0 and DIO2 as LMIC_UNUSED_PIN)
+    .dio = {/* DIO0 */ 2, /* DIO1 */ 3, /* DIO2 */ 4},
+    // Busy input pin (SX126x only). When omitted, a delay is used which might
+    // cause problems.
+    .busy = LMIC_UNUSED_PIN,
+    // TCXO oscillator enable output pin (active high).
+    //
+    // For SX127x this should be an I/O pin that controls the TCXO, or
+    // LMIC_UNUSED_PIN when a crystal is used instead of a TCXO.
+    //
+    // For SX126x this should be LMIC_CONTROLLED_BY_DIO3 when a TCXO is
+    // directly connected to the transceiver DIO3 to let the transceiver
+    // start and stop the TCXO, or LMIC_UNUSED_PIN when a crystal is
+    // used instead of a TCXO. Controlling the TCXO from the MCU is not
+    // supported.
+    .tcxo = LMIC_UNUSED_PIN,
 };
+#endif // !defined(USE_STANDARD_PINMAP)
 
 void onLmicEvent (ev_t ev) {
     Serial.print(os_getTime());
@@ -193,8 +232,8 @@ void setup() {
 
     // Optionally wait for join to complete (uncomment this is you want
     // to run the loop while joining).
-//    while ((LMIC.opmode & (OP_JOINING)))
-//        os_runstep();
+    while ((LMIC.opmode & (OP_JOINING)))
+        os_runstep();
 }
 
 void loop() {
