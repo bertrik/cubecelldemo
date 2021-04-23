@@ -35,16 +35,21 @@
 
 #include "board-config.h"
 
-// This EUI must be in little-endian format, so least-significant-byte
-// first. When copying an EUI from ttnctl output, this means to reverse
-// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
-// 0x70.
-static const u1_t PROGMEM APPEUI[8]= { 0x80, 0x19, 0x04, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
-void os_getJoinEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8);}
+static const u1_t PROGMEM APPEUI[8]= { 0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x04, 0x19, 0x80 };
+void os_getJoinEui (u1_t* buf)
+{
+    for (int i = 0; i < 8; i++) {
+        buf[i] = APPEUI[7 - i];
+    }
+}
 
-// This should also be in little endian format, see above.
-static const u1_t PROGMEM DEVEUI[8]={ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
+static const u1_t PROGMEM DEVEUI[8]={ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+void os_getDevEui (u1_t* buf)
+{
+    for (int i = 0; i < 8; i++) {
+        buf[i] = DEVEUI[7 - i];
+    }
+}
 
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
@@ -52,7 +57,10 @@ void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 // The key shown here is the semtech default key.
 static const u1_t PROGMEM APPKEY[16] =
     { 0x47, 0x02, 0xC1, 0x4F, 0x19, 0xE1, 0x7D, 0x67, 0xE2, 0xC5, 0xD7, 0x87, 0xA9, 0x7D, 0xF0, 0xE6 };
-void os_getNwkKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16);}
+void os_getNwkKey (u1_t* buf)
+{
+    memcpy_P(buf, APPKEY, 16);
+}
 
 // The region to use, this just uses the first one (can be changed if
 // multiple regions are enabled).
