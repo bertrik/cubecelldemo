@@ -43,11 +43,12 @@ void os_getJoinEui (u1_t* buf)
     }
 }
 
-static const u1_t PROGMEM DEVEUI[8]={ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
 void os_getDevEui (u1_t* buf)
 {
+    uint64_t chipid = getID();
     for (int i = 0; i < 8; i++) {
-        buf[i] = DEVEUI[7 - i];
+        buf[i] = chipid & 0xFF;
+        chipid >>= 8;
     }
 }
 
