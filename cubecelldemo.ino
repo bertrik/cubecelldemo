@@ -69,10 +69,10 @@ u1_t os_getRegion (void) { return LMIC_regionCode(0); }
 
 // Schedule TX every this many milliseconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 60000;
+static const unsigned TX_INTERVAL = 60000;
 
 // Timestamp of last packet sent
-uint32_t last_packet = 0;
+static uint32_t last_packet = 0;
 
 const lmic_pinmap lmic_pins = {
     .nss = RADIO_NSS,
@@ -168,6 +168,15 @@ void onLmicEvent (ev_t ev) {
     }
 }
 
+static void send_packet(){
+    // Prepare upstream data transmission at the next possible time.
+    uint8_t mydata[] = "Hello, world!";
+    LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+    Serial.println(F("Packet queued"));
+
+    last_packet = millis();
+}
+
 void setup() {
     Serial.begin(115200);
 
@@ -204,11 +213,3 @@ void loop() {
         send_packet();
 }
 
-void send_packet(){
-    // Prepare upstream data transmission at the next possible time.
-    uint8_t mydata[] = "Hello, world!";
-    LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-    Serial.println(F("Packet queued"));
-
-    last_packet = millis();
-}
