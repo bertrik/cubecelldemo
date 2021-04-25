@@ -186,21 +186,11 @@ void setup() {
     os_init(nullptr);
     LMIC_reset();
 
-    // Enable this to increase the receive window size, to compensate
-    // for an inaccurate clock.  // This compensate for +/- 10% clock
-    // error, a lower value will likely be more appropriate.
-    //LMIC_setClockError(MAX_CLOCK_ERROR * 10 / 100);
-
     // Start join
     LMIC_startJoining();
 
     // Make sure the first packet is scheduled ASAP after join completes
     last_packet = millis() - TX_INTERVAL;
-
-    // Optionally wait for join to complete (uncomment this is you want
-    // to run the loop while joining).
-//    while ((LMIC.opmode & (OP_JOINING)))
-//        os_runstep();
 }
 
 void loop() {
